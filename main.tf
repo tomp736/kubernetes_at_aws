@@ -1,7 +1,7 @@
 # ./main.tf
 
 module "aws_network" {
-  for_each = { for network in local.config.networks : network.id => network if network.aws != null }
+  for_each = { for network in local.networks : network.id => network if network.aws != null }
   source   = "git::https://github.com/labrats-work/modules-terraform.git//modules/aws/network?ref=main"
 
   network_name          = each.value.aws.name
@@ -10,7 +10,7 @@ module "aws_network" {
 }
 
 module "cloud-init" {
-  for_each = { for node in local.config.nodes : node.id => node if node.aws != null }
+  for_each = { for node in local.nodes : node.id => node if node.aws != null }
   source   = "git::https://github.com/labrats-work/modules-terraform.git//modules/cloud-init?ref=main"
   general = {
     hostname                   = each.value.aws.name
@@ -36,18 +36,12 @@ module "cloud-init" {
 }
 
 module "aws_nodes" {
-  for_each = { for node in local.config.nodes : node.id => node if node.aws != null }
+  for_each = { for node in local.nodes : node.id => node if node.aws != null }
 
   source               = "git::https://github.com/labrats-work/modules-terraform.git//modules/aws/node?ref=main"
   node_config          = each.value.aws
+  subnet_id            = values(module.aws_network.aws_subnets)[0].id
   cloud_init_user_data = module.cloud-init[each.key].user_data
-}
-
-resource "hcloud_server_network" "kubernetes_subnet" {
-  for_each = { for node in local.config.nodes : node.id => node }
-
-  server_id = module.aws_nodes[each.key].id
-  subnet_id = values(module.aws_network)[0].aws_subnets["10.98.0.0/24"].id
 }
 
 resource "local_file" "ansible_inventory" {
