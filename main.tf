@@ -40,7 +40,7 @@ module "aws_nodes" {
 
   source               = "git::https://github.com/labrats-work/modules-terraform.git//modules/aws/node?ref=main"
   node_config          = each.value.aws
-  subnet_id            = values(module.aws_network.aws_subnets)[0].id
+  subnet_id            = values(module.aws_network)[0].hetzner_subnets["10.98.0.0/24"].id
   cloud_init_user_data = module.cloud-init[each.key].user_data
 }
 
