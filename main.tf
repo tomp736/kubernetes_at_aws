@@ -1,25 +1,19 @@
 # ./main.tf
 
-locals {
-  config   = jsondecode(file("files/config.json"))
-  networks = local.config.networks
-  nodes    = local.config.nodes
-}
+module "aws_network" {
+  for_each = { for network in local.config.networks : network.id => network if network.aws != null }
+  source   = "git::https://github.com/labrats-work/modules-terraform.git//modules/aws/network?ref=main"
 
-module "hetzner_network" {
-  for_each = { for network in local.config.networks : network.id => network if network.hetzner != null }
-  source   = "git::https://github.com/labrats-work/modules-terraform.git//modules/hetzner/network?ref=main"
-
-  network_name          = each.value.hetzner.name
-  network_ip_range      = each.value.hetzner.ip_range
-  network_subnet_ranges = each.value.hetzner.subnet_ranges
+  network_name          = each.value.aws.name
+  network_ip_range      = each.value.aws.ip_range
+  network_subnet_ranges = each.value.aws.subnet_ranges
 }
 
 module "cloud-init" {
-  for_each = { for node in local.config.nodes : node.id => node if node.hetzner != null }
+  for_each = { for node in local.config.nodes : node.id => node if node.aws != null }
   source   = "git::https://github.com/labrats-work/modules-terraform.git//modules/cloud-init?ref=main"
   general = {
-    hostname                   = each.value.hetzner.name
+    hostname                   = each.value.aws.name
     package_reboot_if_required = true
     package_update             = true
     package_upgrade            = true
@@ -41,40 +35,40 @@ module "cloud-init" {
   ]
 }
 
-module "hetzner_nodes" {
-  for_each = { for node in local.config.nodes : node.id => node if node.hetzner != null }
+module "aws_nodes" {
+  for_each = { for node in local.config.nodes : node.id => node if node.aws != null }
 
-  source               = "git::https://github.com/labrats-work/modules-terraform.git//modules/hetzner/node?ref=main"
-  node_config          = each.value.hetzner
+  source               = "git::https://github.com/labrats-work/modules-terraform.git//modules/aws/node?ref=main"
+  node_config          = each.value.aws
   cloud_init_user_data = module.cloud-init[each.key].user_data
 }
 
 resource "hcloud_server_network" "kubernetes_subnet" {
   for_each = { for node in local.config.nodes : node.id => node }
 
-  server_id = module.hetzner_nodes[each.key].id
-  subnet_id = values(module.hetzner_network)[0].hetzner_subnets["10.98.0.0/24"].id
+  server_id = module.aws_nodes[each.key].id
+  subnet_id = values(module.aws_network)[0].aws_subnets["10.98.0.0/24"].id
 }
 
 resource "local_file" "ansible_inventory" {
   content  = <<-EOT
 [master]
-%{for node in module.hetzner_nodes~}
+%{for node in module.aws_nodes~}
 %{if node.nodetype == "master"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
 %{~endfor~}
 
 [worker]
-%{for node in module.hetzner_nodes~}
+%{for node in module.aws_nodes~}
 %{if node.nodetype == "worker"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
 %{~endfor~}
 
 [haproxy]
-%{for node in module.hetzner_nodes~}
+%{for node in module.aws_nodes~}
 %{if node.nodetype == "haproxy"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
 %{~endfor~}
 
 [bastion]
-%{for node in module.hetzner_nodes~}
+%{for node in module.aws_nodes~}
 %{if node.nodetype == "bastion"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
 %{~endfor~}
   EOT
