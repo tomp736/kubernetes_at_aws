@@ -47,23 +47,23 @@ module "aws_nodes" {
 resource "local_file" "ansible_inventory" {
   content  = <<-EOT
 [master]
-%{for node in module.aws_nodes~}
-%{if node.nodetype == "master"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
+%{for node in node in local.nodes~}
+%{if node.nodetype == "master"}${~node.name} ansible_host=${aws_nodes[node.id].public_ip}%{endif}
 %{~endfor~}
 
 [worker]
-%{for node in module.aws_nodes~}
-%{if node.nodetype == "worker"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
+%{for node in node in local.nodes~}
+%{if node.nodetype == "worker"}${~node.name} ansible_host=${aws_nodes[node.id].public_ip}%{endif}
 %{~endfor~}
 
 [haproxy]
-%{for node in module.aws_nodes~}
-%{if node.nodetype == "haproxy"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
+%{for node in node in local.nodes~}
+%{if node.nodetype == "haproxy"}${~node.name} ansible_host=${aws_nodes[node.id].public_ip}%{endif}
 %{~endfor~}
 
 [bastion]
-%{for node in module.aws_nodes~}
-%{if node.nodetype == "bastion"}${~node.name} ansible_host=${node.ipv4_address}%{endif}
+%{for node in node in local.nodes~}
+%{if node.nodetype == "bastion"}${~node.name} ansible_host=${aws_nodes[node.id].public_ip}%{endif}
 %{~endfor~}
   EOT
   filename = "ansible/inventory"
