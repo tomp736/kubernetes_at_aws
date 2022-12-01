@@ -61,7 +61,6 @@ jobs:
     - 
       name: Create aws credentials and config files.
       run: |
-        cd tests/aws
         mkdir -p .aws
         echo ".aws/credentials"
         echo "[default]" > .aws/credentials
