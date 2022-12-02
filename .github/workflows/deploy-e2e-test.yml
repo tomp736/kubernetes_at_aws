@@ -131,12 +131,40 @@ jobs:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
       if: always()
+      id: destroy
+      continue-on-error: true
+      uses: labrats-work/action-terraform@main
+      with:
+        verb: destroy
+        init: yes
+        varsFile: default.tfvars
+        backendConfigFile: config.remote.tfbackend
+        sshKey: ${{ env.KEYFILE }}
+      env:
+        TF_CLI_CONFIG_FILE: default.tfrc
+    - 
+      if: always() && steps.destroy.outcome == 'failure'
+      id: destroy2
+      continue-on-error: true
+      uses: labrats-work/action-terraform@main
+      with:
+        verb: destroy
+        init: yes
+        varsFile: default.tfvars
+        backendConfigFile: config.remote.tfbackend
+        sshKey: ${{ env.KEYFILE }}
+      env:
+        TF_CLI_CONFIG_FILE: default.tfrc
+    - 
+      if: always() && steps.destroy2.outcome == 'failure'
+      id: destroy3
       name: Terraform Destroy
       uses: labrats-work/action-terraform@main
       with:
         verb: destroy
         init: yes
         varsFile: default.tfvars
+        backendConfigFile: config.remote.tfbackend
         sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
