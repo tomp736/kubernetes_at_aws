@@ -138,7 +138,6 @@ jobs:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        backendConfigFile: config.remote.tfbackend
         sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
@@ -151,7 +150,6 @@ jobs:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        backendConfigFile: config.remote.tfbackend
         sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
@@ -164,7 +162,6 @@ jobs:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        backendConfigFile: config.remote.tfbackend
         sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
