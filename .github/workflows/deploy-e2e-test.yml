@@ -7,7 +7,6 @@ on:
 env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
   RESOURCE_PREFIX: "${{ github.head_ref || github.ref_name }}-"
-  DEPS_REF: main
 
 permissions:
   contents: read
@@ -60,9 +59,9 @@ jobs:
         echo "region = \"eu-north-1\"" >> .aws/config
     -
       if: github.ref != 'refs/heads/main'
-      name: Update git ref to match build branch name.
+      name: Update terraform refs to dev for all branches but main.
       run: |
-        sed -i 's|?ref=main|?ref=${{ env.DEPS_REF }}|g' main.tf
+        sed -i 's|?ref=main|?ref=dev|g' main.tf
     - 
       name: Update prefix for resources.
       run: |
@@ -75,7 +74,6 @@ jobs:
         init: yes
         varsFile: default.tfvars
         planFile: tfplan
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -85,7 +83,6 @@ jobs:
         verb: apply
         init: yes
         planFile: tfplan
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -101,8 +98,7 @@ jobs:
       name: Run playbook
       uses: labrats-work/action-ansible@main
       with:
-        workingDirectory: ./ansible
-        sshKey: ${{ env.KEYFILE }}
+        workingDirectory: ./ansible\
     - 
       name: Cluster Timeout
       run: |
@@ -116,7 +112,6 @@ jobs:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -127,18 +122,39 @@ jobs:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
       if: always()
+      id: destroy
+      continue-on-error: true
+      uses: labrats-work/action-terraform@main
+      with:
+        verb: destroy
+        init: yes
+        varsFile: default.tfvars
+      env:
+        TF_CLI_CONFIG_FILE: default.tfrc
+    - 
+      if: always() && steps.destroy.outcome == 'failure'
+      id: destroy2
+      continue-on-error: true
+      uses: labrats-work/action-terraform@main
+      with:
+        verb: destroy
+        init: yes
+        varsFile: default.tfvars
+      env:
+        TF_CLI_CONFIG_FILE: default.tfrc
+    - 
+      if: always() && steps.destroy2.outcome == 'failure'
+      id: destroy3
       name: Terraform Destroy
       uses: labrats-work/action-terraform@main
       with:
         verb: destroy
         init: yes
         varsFile: default.tfvars
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     
