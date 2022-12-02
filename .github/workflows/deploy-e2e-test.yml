@@ -98,7 +98,7 @@ jobs:
       name: Run playbook
       uses: labrats-work/action-ansible@main
       with:
-        workingDirectory: ./ansible\
+        workingDirectory: ./ansible
     - 
       name: Cluster Timeout
       run: |
@@ -107,25 +107,6 @@ jobs:
     - 
       if: always()
       name: Terraform Destroy
-      uses: labrats-work/action-terraform@main
-      with:
-        verb: destroy
-        init: yes
-        varsFile: default.tfvars
-      env:
-        TF_CLI_CONFIG_FILE: default.tfrc
-    - 
-      if: always()
-      name: Terraform Destroy
-      uses: labrats-work/action-terraform@main
-      with:
-        verb: destroy
-        init: yes
-        varsFile: default.tfvars
-      env:
-        TF_CLI_CONFIG_FILE: default.tfrc
-    - 
-      if: always()
       id: destroy
       continue-on-error: true
       uses: labrats-work/action-terraform@main
@@ -137,6 +118,7 @@ jobs:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
       if: always() && steps.destroy.outcome == 'failure'
+      name: Terraform Destroy
       id: destroy2
       continue-on-error: true
       uses: labrats-work/action-terraform@main
@@ -148,8 +130,8 @@ jobs:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
       if: always() && steps.destroy2.outcome == 'failure'
-      id: destroy3
       name: Terraform Destroy
+      id: destroy3
       uses: labrats-work/action-terraform@main
       with:
         verb: destroy
