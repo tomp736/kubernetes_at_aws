@@ -98,7 +98,7 @@ jobs:
       name: Run playbook
       uses: labrats-work/action-ansible@main
       with:
-        workingDirectory: ./ansible\
+        workingDirectory: ./ansible
     - 
       name: Cluster Timeout
       run: |
