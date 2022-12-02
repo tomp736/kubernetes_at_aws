@@ -99,7 +99,6 @@ jobs:
         varsFile: default.tfvars
         planFile: tfplan
         backendConfigFile: config.remote.tfbackend
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -110,7 +109,6 @@ jobs:
         init: yes
         planFile: tfplan
         backendConfigFile: config.remote.tfbackend
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -125,7 +123,6 @@ jobs:
       uses: labrats-work/action-ansible@main
       with:
         workingDirectory: ./ansible
-        sshKey: ${{ env.KEYFILE }}
     - 
       name: Cluster Timeout
       run: |
@@ -141,7 +138,6 @@ jobs:
         init: yes
         varsFile: default.tfvars
         backendConfigFile: config.remote.tfbackend
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -154,7 +150,6 @@ jobs:
         init: yes
         varsFile: default.tfvars
         backendConfigFile: config.remote.tfbackend
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     - 
@@ -167,7 +162,6 @@ jobs:
         init: yes
         varsFile: default.tfvars
         backendConfigFile: config.remote.tfbackend
-        sshKey: ${{ env.KEYFILE }}
       env:
         TF_CLI_CONFIG_FILE: default.tfrc
     
