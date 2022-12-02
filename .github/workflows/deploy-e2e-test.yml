@@ -58,7 +58,7 @@ jobs:
         echo "[default]" > .aws/config
         echo "region = \"eu-north-1\"" >> .aws/config
     -
-      if: github.ref == 'refs/heads/main'
+      if: github.ref != 'refs/heads/main'
       name: Update terraform refs to dev for all branches but main.
       run: |
         sed -i 's|?ref=main|?ref=dev|g' main.tf
