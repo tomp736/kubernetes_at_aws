@@ -1,0 +1,7 @@
+.terraform/*
+.terraform*
+terraform.*
+*.tfvars
+ansible/inventory
+
+secrets/*
